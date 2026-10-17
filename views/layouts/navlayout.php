@@ -83,7 +83,7 @@ function navClass(string $page, string $current): string {
         <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-2 mb-3">Main Menu</p>
 
         <!-- Dashboard -->
-        <a href="/ProjectCCIT_PHP_NATIVE/views/dashboard/dashboard.php"
+        <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=dashboard"
            class="<?= navClass('dashboard', $currentPage) ?>">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -99,7 +99,7 @@ function navClass(string $page, string $current): string {
         </a>
 
         <!-- My Notes -->
-        <a href="/ProjectCCIT_PHP_NATIVE/views/notes/allnotes.php"
+        <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=notes"
            class="<?= navClass('notes', $currentPage) ?>">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -115,7 +115,7 @@ function navClass(string $page, string $current): string {
         </a>
 
         <!-- Plans / Diaries -->
-        <a href="/ProjectCCIT_PHP_NATIVE/views/diaries/alldiaries.php"
+        <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=plans"
            class="<?= navClass('plans', $currentPage) ?>">
             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
