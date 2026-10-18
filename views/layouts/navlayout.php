@@ -1,123 +1,222 @@
 <?php
+if (!isset($user)) {
+    $user = ['name' => 'Ones', 'email' => 'onesmelon@gmail.com'];
+}
 
-if (!isset($currentPage)) {
-    $path = $_SERVER['REQUEST_URI'];
-    if (strpos($path, '/dashboard') !== false) {
-        $currentPage = 'dashboard';
-    } elseif (strpos($path, '/diaries') !== false || strpos($path, '/plans') !== false) {
-        $currentPage = 'plans';
-    } elseif (strpos($path, '/notes') !== false) {
-        $currentPage = 'notes';
+if (!isset($currentPage) || empty($currentPage)) {
+    $paramPage = $_GET['page'] ?? $_GET['action'] ?? '';
+    if (!empty($paramPage)) {
+        if (in_array($paramPage, ['dashboard'])) {
+            $currentPage = 'dashboard';
+        } elseif (in_array($paramPage, ['plans', 'allplans', 'plan_detail'])) {
+            $currentPage = 'plans';
+        } elseif (in_array($paramPage, ['notes', 'allnotes', 'createnotes', 'detailnotes', 'editnotes'])) {
+            $currentPage = 'notes';
+        }
     } else {
-        $currentPage = '';
+        $path = $_SERVER['REQUEST_URI'];
+        if (strpos($path, '/dashboard') !== false) {
+            $currentPage = 'dashboard';
+        } elseif (strpos($path, '/diaries') !== false || strpos($path, '/plans') !== false) {
+            $currentPage = 'plans';
+        } elseif (strpos($path, '/notes') !== false) {
+            $currentPage = 'notes';
+        } else {
+            $currentPage = 'dashboard';
+        }
     }
 }
 
-
-function navClass(string $page, string $current): string {
-    if ($page === $current) {
-        return 'sidebar-link active flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/90 text-sm font-semibold';
+if (!function_exists('navClass')) {
+    function navClass(string $page, string $current): string {
+        $base = 'sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative';
+        if ($page === $current) {
+            return $base . ' active bg-[#E0405C]/15 text-[#f09bae] font-semibold shadow-sm shadow-[#E0405C]/5';
+        }
+        return $base . ' text-white/60 hover:text-white hover:bg-white/[0.06]';
     }
-    return 'sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 text-sm font-medium';
+}
+
+$userInitials = 'O';
+if (!empty($user['name'])) {
+    $words = explode(' ', trim($user['name']));
+    $userInitials = strtoupper(substr($words[0], 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
 }
 ?>
 
-
+<!-- Immediate script to prevent layout flash on page navigation -->
+<script>
+    (function() {
+        try {
+            if (localStorage.getItem('ritma_sidebar_collapsed') === 'true') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        } catch (e) {}
+    })();
+</script>
 
 <style>
+    /* ─── Sidebar Transitions & Sizing ─── */
+    .sidebar-container {
+        width: 16rem; /* 256px */
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        will-change: width;
+    }
 
-    .sidebar-link {
-        transition: all 0.18s ease;
+    html.sidebar-collapsed .sidebar-container {
+        width: 4.75rem; /* 76px */
     }
-    .sidebar-link:hover {
-        background: rgba(192, 41, 74, 0.15);
-        color: #e87a92;
+
+    /* Text hiding & animation */
+    .sidebar-text-node {
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        white-space: nowrap;
     }
-    .sidebar-link.active {
-        background: rgba(192, 41, 74, 0.18);
-        color: #f09bae;
-        border-left: 3px solid #C0294A;
-        padding-left: calc(0.75rem - 3px); 
+
+    html.sidebar-collapsed .sidebar-text-node {
+        opacity: 0;
+        pointer-events: none;
+        display: none !important;
     }
-    .sidebar-link.active svg {
-        color: #C0294A;
+
+    html.sidebar-collapsed .sidebar-brand-collapsed {
+        display: flex !important;
+    }
+
+    html.sidebar-collapsed .sidebar-brand-expanded {
+        display: none !important;
+    }
+
+    html.sidebar-collapsed .sidebar-nav-item {
+        justify-content: center;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+    html.sidebar-collapsed .sidebar-section-header {
+        display: none !important;
+    }
+
+    html.sidebar-collapsed .sidebar-toggle-icon {
+        transform: rotate(180deg);
+    }
+
+    .sidebar-nav-item.active svg {
+        color: #E0405C;
+    }
+
+    .sidebar-nav-item:hover svg {
+        color: #fff;
+    }
+
+    /* Custom Floating Tooltip for Collapsed State */
+    html.sidebar-collapsed .sidebar-nav-item:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 100%;
+        margin-left: 0.75rem;
+        padding: 0.35rem 0.75rem;
+        background: #1B1B26;
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        white-space: nowrap;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 50;
+        pointer-events: none;
+        animation: fadeIn 0.15s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateX(-4px); }
+        to { opacity: 1; transform: translateX(0); }
     }
 </style>
 
-<aside class="w-64 bg-[#1a1a2e] flex-shrink-0 flex flex-col h-full overflow-y-auto">
+<aside id="appSidebar" class="sidebar-container bg-[#161822] flex-shrink-0 flex flex-col h-full overflow-hidden border-r border-white/5 select-none">
 
-    <!-- ── Logo ── -->
-    <div class="px-6 py-6 border-b border-white/10">
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-[#C0294A] flex items-center justify-center shadow-lg shadow-[#C0294A]/30">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
-                </svg>
+    <!-- ── Brand & Collapse Toggle ── -->
+    <div class="px-5 py-5 border-b border-white/[0.08] flex items-center justify-between min-h-[72px]">
+        
+        <!-- Expanded Brand -->
+        <div class="sidebar-brand-expanded flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#E0405C] to-[#ff6b87] flex items-center justify-center text-white font-black text-sm shadow-md shadow-[#E0405C]/25">
+                R
             </div>
             <div>
-                <p class="text-white font-bold text-sm leading-tight">Ritma!</p>
-                <p class="text-white/40 text-xs">Write. Organize. Grow.</p>
+                <p class="text-white font-bold text-lg leading-tight tracking-tight">Ritma<span class="text-[#E0405C]">!</span></p>
+                <p class="text-white/40 text-[10px] uppercase font-medium tracking-wider">Plan · Notes</p>
             </div>
         </div>
-    </div>
 
-    <!-- ── User Profile ── -->
-    <div class="px-6 py-5 border-b border-white/10">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#C0294A] to-pink-400
-                        flex items-center justify-center text-white font-bold text-sm shadow">
-                YS
-            </div>
-            <div>
-                <p class="text-white font-semibold text-sm">Younes Sidqi</p>
-                <p class="text-white/40 text-xs">younes@mail.com</p>
+        <!-- Collapsed Icon-Only Brand (Hidden by default, shown when collapsed) -->
+        <div class="sidebar-brand-collapsed hidden w-full justify-center">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#E0405C] to-[#ff6b87] flex items-center justify-center text-white font-black text-base shadow-md shadow-[#E0405C]/25 cursor-pointer" onclick="toggleSidebar()">
+                R<span class="text-white text-xs">!</span>
             </div>
         </div>
+
+        <!-- Sidebar Toggle Button (Inside header) -->
+        <button type="button" 
+                id="sidebarToggleBtn" 
+                onclick="toggleSidebar()"
+                class="sidebar-text-node p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors focus:outline-none"
+                title="Toggle Sidebar (Collapse / Expand)">
+            <svg class="w-5 h-5 sidebar-toggle-icon transition-transform duration-300" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="16" rx="2" stroke-width="1.8"/>
+                <path stroke-linecap="round" d="M9 4v16"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="m14 10-2 2 2 2"/>
+            </svg>
+        </button>
     </div>
 
     <!-- ── Navigation ── -->
-    <nav class="flex-1 px-4 py-5 space-y-1">
+    <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
 
-        <!-- Main Menu -->
-        <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-2 mb-3">Main Menu</p>
+        <!-- Section Header -->
+        <p class="sidebar-section-header text-white/30 text-[11px] font-semibold uppercase tracking-wider px-3 mb-2 pt-1">Main Menu</p>
 
         <!-- Dashboard -->
-        <a href="/ProjectCCIT_PHP_NATIVE/views/dashboard/dashboard.php"
-           class="<?= navClass('dashboard', $currentPage) ?>">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=dashboard"
+           class="<?= navClass('dashboard', $currentPage) ?>"
+           data-tooltip="Dashboard">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
                       d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6z
                          M3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25z
                          M13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6z
                          M13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/>
             </svg>
-            Dashboard
+            <span class="sidebar-text-node flex-1">Dashboard</span>
             <?php if ($currentPage === 'dashboard'): ?>
-                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-[#C0294A]"></span>
+                <span class="sidebar-text-node ml-auto w-1.5 h-1.5 rounded-full bg-[#E0405C]"></span>
             <?php endif; ?>
         </a>
 
         <!-- My Notes -->
-        <a href="/ProjectCCIT_PHP_NATIVE/views/notes/allnotes.php"
-           class="<?= navClass('notes', $currentPage) ?>">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes"
+           class="<?= navClass('notes', $currentPage) ?>"
+           data-tooltip="My Notes">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
                       d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5
                          A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25
                          m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75
                          c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
             </svg>
-            My Notes
+            <span class="sidebar-text-node flex-1">My Notes</span>
             <?php if ($currentPage === 'notes'): ?>
-                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-[#C0294A]"></span>
+                <span class="sidebar-text-node ml-auto w-1.5 h-1.5 rounded-full bg-[#E0405C]"></span>
             <?php endif; ?>
         </a>
 
-        <!-- Plans / Diaries -->
-        <a href="/ProjectCCIT_PHP_NATIVE/views/diaries/alldiaries.php"
-           class="<?= navClass('plans', $currentPage) ?>">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <!-- Plans -->
+        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=plans"
+           class="<?= navClass('plans', $currentPage) ?>"
+           data-tooltip="Plans">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
                       d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5
                          A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5
@@ -131,29 +230,18 @@ function navClass(string $page, string $current): string {
                          M14.25 15h.008v.008h-.008V15z
                          M14.25 18h.008v.008h-.008V18z"/>
             </svg>
-            Plans
+            <span class="sidebar-text-node flex-1">Plans</span>
             <?php if ($currentPage === 'plans'): ?>
-                <span class="ml-auto w-1.5 h-1.5 rounded-full bg-[#C0294A]"></span>
+                <span class="sidebar-text-node ml-auto w-1.5 h-1.5 rounded-full bg-[#E0405C]"></span>
             <?php endif; ?>
         </a>
 
-        <!-- Bookmarks -->
-        <a href="#"
-           class="<?= navClass('bookmarks', $currentPage) ?>">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507
-                         c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
-            </svg>
-            Bookmarks
-        </a>
-
-        <!-- Account Section -->
-        <p class="text-white/30 text-xs font-semibold uppercase tracking-widest px-2 pt-5 pb-2">Account</p>
+        <!-- Account Section Header -->
+        <p class="sidebar-section-header text-white/30 text-[11px] font-semibold uppercase tracking-wider px-3 pt-5 pb-1">Account</p>
 
         <!-- Settings -->
-        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 text-sm font-medium">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <a href="#" class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/60 hover:text-white hover:bg-white/[0.06] text-sm font-medium transition-colors" data-tooltip="Settings">
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round"
                       d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894
                          c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12
@@ -173,18 +261,18 @@ function navClass(string $page, string $current): string {
                          .397-.165.71-.505.78-.929l.15-.894z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            Settings
+            <span class="sidebar-text-node flex-1">Settings</span>
         </a>
 
-        <!-- Logout -->
-        <a href="#" class="sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 text-sm font-medium">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5
-                         A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-            </svg>
-            Logout
-        </a>
     </nav>
 
 </aside>
+
+<script>
+    function toggleSidebar() {
+        const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+        try {
+            localStorage.setItem('ritma_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+        } catch (e) {}
+    }
+</script>
