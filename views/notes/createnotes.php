@@ -1,6 +1,14 @@
 <?php
     $currentPage = 'notes';
     $navLayoutPath = __DIR__ . '/../layouts/navlayout.php';
+    if (!file_exists($navLayoutPath)) {
+        $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
+    }
+
+    if (!isset($plans)) {
+        require_once __DIR__ . '/../../models/models.php';
+        $plans = getAllPlans($_SESSION['user_id'] ?? 1);
+    }
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -14,10 +22,10 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#C0294A',
-                        'primary-light': '#D94060',
-                        'primary-dark': '#A0223E',
-                        sidebar: '#1a1a2e',
+                        primary: '#E0405C',
+                        'primary-light': '#FDE8ED',
+                        'primary-dark': '#C0294A',
+                        sidebar: '#1B1B26',
                     },
                     fontFamily: {
                         sans: ['Inter', 'ui-sans-serif', 'system-ui'],
@@ -34,16 +42,16 @@
         /* Sidebar */
         .sidebar-link { transition: all 0.18s ease; }
         .sidebar-link:hover, .sidebar-link.active {
-            background: rgba(192, 41, 74, 0.15);
-            color: #e87a92;
+            background: rgba(224, 64, 92, 0.15);
+            color: #f09bae;
         }
-        .sidebar-link.active { border-left: 3px solid #C0294A; }
+        .sidebar-link.active { border-left: 3px solid #E0405C; }
 
         /* Input focus ring */
         .form-input:focus, .form-textarea:focus {
             outline: none;
-            border-color: #C0294A;
-            box-shadow: 0 0 0 3px rgba(192, 41, 74, 0.12);
+            border-color: #E0405C;
+            box-shadow: 0 0 0 3px rgba(224, 64, 92, 0.12);
         }
 
         /* Upload zone */
@@ -52,8 +60,8 @@
             border: 2px dashed #e5e7eb;
         }
         .upload-zone:hover, .upload-zone.drag-over {
-            border-color: #C0294A;
-            background: rgba(192, 41, 74, 0.03);
+            border-color: #E0405C;
+            background: rgba(224, 64, 92, 0.03);
         }
 
         /* Tag chip */
@@ -70,7 +78,7 @@
         }
         .save-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 30px rgba(192, 41, 74, 0.35);
+            box-shadow: 0 10px 30px rgba(224, 64, 92, 0.35);
         }
         .save-btn:active { transform: translateY(0); }
 
@@ -78,14 +86,14 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #C0294A; }
+        ::-webkit-scrollbar-thumb:hover { background: #E0405C; }
 
         /* Image preview */
         #imagePreviewWrap { transition: all 0.3s ease; }
 
         /* Char counter pulse */
         @keyframes pulse-red {
-            0%, 100% { color: #C0294A; }
+            0%, 100% { color: #E0405C; }
             50% { color: #e05a77; }
         }
         .char-warn { animation: pulse-red 1s infinite; }
@@ -96,15 +104,13 @@
     <!-- ===== SIDEBAR (shared layout) ===== -->
     <?php require $navLayoutPath; ?>
 
-
-
     <!-- ===== MAIN CONTENT ===== -->
     <div class="flex-1 flex flex-col overflow-hidden">
 
         <!-- Top Bar -->
         <header class="bg-white border-b border-gray-100 px-8 py-4 flex items-center justify-between flex-shrink-0">
             <div class="flex items-center gap-3">
-                <a href="/ProjectCCIT_PHP_NATIVE/views/notes/allnotes.php"
+                <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes"
                    class="flex items-center gap-2 text-gray-400 hover:text-primary text-sm font-medium transition-colors group">
                     <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
@@ -115,12 +121,11 @@
                 <span class="text-sm font-semibold text-gray-800">Add New Note</span>
             </div>
             <div class="flex items-center gap-3">
-                <!-- Keyboard shortcut hint -->
-                <button id="discardBtn"
+                <button type="button" id="discardBtn"
                    class="text-sm font-medium text-gray-400 hover:text-red-500 px-4 py-2 rounded-xl hover:bg-red-50 transition-all duration-200">
                     Discard
                 </button>
-                <button id="saveBtn"
+                <button type="button" id="saveBtn"
                    class="save-btn flex items-center gap-2 bg-primary text-white text-sm font-semibold px-6 py-2.5 rounded-xl shadow-lg shadow-primary/25">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
@@ -140,27 +145,37 @@
                     <p class="text-sm text-gray-400 mt-1">Write something here — your ideas matter ✍️</p>
                 </div>
 
-                <form id="noteForm" action="#" method="POST" enctype="multipart/form-data" class="space-y-6">
+                <form id="noteForm" action="/ProjectCCIT_PHP_NATIVE/index.php?page=store_note" method="POST" enctype="multipart/form-data" class="space-y-6">
 
-                    <!-- Two-column: Title + Tag -->
-                    <div class="grid grid-cols-3 gap-4">
-                        <!-- Note Title -->
-                        <div class="col-span-3">
-                            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Note Title <span class="text-primary">*</span></label>
-                            <input
-                                type="text"
-                                id="noteTitle"
-                                name="title"
-                                placeholder="Enter a descriptive title..."
-                                maxlength="100"
-                                class="form-input w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-sm text-gray-800 placeholder-gray-400 transition-all duration-200 font-medium"
-                                oninput="updateTitleCount()"
-                                required
-                            >
-                            <div class="flex justify-end mt-1.5">
-                                <span id="titleCount" class="text-xs text-gray-300">0 / 100</span>
-                            </div>
+                    <!-- Title -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Note Title <span class="text-primary">*</span></label>
+                        <input
+                            type="text"
+                            id="noteTitle"
+                            name="title"
+                            placeholder="Enter a descriptive title..."
+                            maxlength="100"
+                            class="form-input w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm text-gray-800 placeholder-gray-400 transition-all duration-200 font-medium"
+                            oninput="updateTitleCount()"
+                            required
+                        >
+                        <div class="flex justify-end mt-1.5">
+                            <span id="titleCount" class="text-xs text-gray-300">0 / 100</span>
                         </div>
+                    </div>
+
+                    <!-- Link to Plan (Optional FK) -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Link to Plan <span class="text-gray-300 font-normal normal-case">(optional)</span></label>
+                        <select name="plan_id" class="form-input w-full bg-white border border-gray-200 rounded-2xl px-5 py-3.5 text-sm text-gray-800 transition-all duration-200 font-medium">
+                            <option value="">None / Standalone Note</option>
+                            <?php if (!empty($plans)): ?>
+                                <?php foreach ($plans as $p): ?>
+                                    <option value="<?= $p['plan_id'] ?>"><?= htmlspecialchars($p['title']) ?> (<?= htmlspecialchars($p['plan_date'] ?? '-') ?>)</option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
                     </div>
 
                     <!-- Note Content -->
@@ -172,12 +187,12 @@
                             placeholder="Write your note here... let your thoughts flow freely."
                             rows="10"
                             maxlength="5000"
-                            class="form-textarea w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-800 placeholder-gray-400 resize-none transition-all duration-200 leading-relaxed"
+                            class="form-textarea w-full bg-white border border-gray-200 rounded-2xl px-5 py-4 text-sm text-gray-800 placeholder-gray-400 resize-none transition-all duration-200 leading-relaxed"
                             oninput="updateContentCount()"
                             required
                         ></textarea>
                         <div class="flex items-center justify-between mt-1.5">
-                            <span class="text-xs text-gray-300">Supports plain text only</span>
+                            <span class="text-xs text-gray-300">Supports plain text</span>
                             <span id="contentCount" class="text-xs text-gray-300">0 / 5000</span>
                         </div>
                     </div>
@@ -230,21 +245,11 @@
 
                     <!-- Divider -->
                     <div class="border-t border-gray-100 pt-6">
-
-                        <!-- Bottom action row -->
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <!-- Bookmark toggle -->
-                                <button type="button" id="bookmarkBtn" onclick="toggleBookmark()"
-                                    class="flex items-center gap-2 text-sm text-gray-400 hover:text-primary font-medium px-4 py-2.5 rounded-xl border border-gray-200 hover:border-primary hover:bg-red-50 transition-all duration-200">
-                                    <svg id="bookmarkIcon" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/>
-                                    </svg>
-                                    <span id="bookmarkLabel">Bookmark</span>
-                                    <input type="hidden" name="bookmarked" id="bookmarkVal" value="0">
-                                </button>
-                            </div>
-
+                        <div class="flex items-center justify-end gap-3">
+                            <button type="button" onclick="window.location.href='/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes'"
+                                class="px-6 py-3 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors">
+                                Cancel
+                            </button>
                             <!-- Save button (bottom) -->
                             <button type="submit" id="saveBtnBottom"
                                class="save-btn flex items-center gap-2 bg-primary text-white text-sm font-semibold px-8 py-3 rounded-xl shadow-lg shadow-primary/25">
@@ -320,34 +325,9 @@
             const file = e.dataTransfer.files[0];
             if (file && file.type.startsWith('image/')) {
                 showPreview(file);
-                // Assign to file input via DataTransfer
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 document.getElementById('imageInput').files = dt.files;
-            }
-        }
-
-        // ── Bookmark toggle ─────────────────────────────────────────
-        let bookmarked = false;
-        function toggleBookmark() {
-            bookmarked = !bookmarked;
-            const icon  = document.getElementById('bookmarkIcon');
-            const label = document.getElementById('bookmarkLabel');
-            const val   = document.getElementById('bookmarkVal');
-            const btn   = document.getElementById('bookmarkBtn');
-
-            if (bookmarked) {
-                icon.setAttribute('fill', '#C0294A');
-                icon.setAttribute('stroke', '#C0294A');
-                label.textContent = 'Bookmarked';
-                btn.classList.add('text-primary', 'border-primary', 'bg-red-50');
-                val.value = '1';
-            } else {
-                icon.setAttribute('fill', 'none');
-                icon.setAttribute('stroke', 'currentColor');
-                label.textContent = 'Bookmark';
-                btn.classList.remove('text-primary', 'border-primary', 'bg-red-50');
-                val.value = '0';
             }
         }
 
@@ -362,7 +342,7 @@
         // ── Discard → back to list ──────────────────────────────────
         document.getElementById('discardBtn').addEventListener('click', () => {
             if (confirm('Discard changes and go back?')) {
-                window.location.href = '/ProjectCCIT_PHP_NATIVE/views/notes/allnotes.php';
+                window.location.href = '/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes';
             }
         });
 

@@ -1,11 +1,15 @@
 <?php
     $currentPage = 'dashboard';
     $navLayoutPath = __DIR__ . '/../layouts/navlayout.php';
+    if (!file_exists($navLayoutPath)) {
+        $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
+    }
 
-    if (!isset($user))   $user   = ['name' => 'Dimas Arkana', 'email' => 'dimas@mail.com'];
-    if (!isset($tasks))  $tasks  = [];
+    if (!isset($user))        $user        = ['name' => 'Ones', 'email' => 'onesmelon@@gmail.com'];
+    if (!isset($tasks))       $tasks       = [];
     if (!isset($recentNotes)) $recentNotes = [];
-    if (!isset($totalPlans))  $totalPlans  = 0;
+    if (!isset($doneTasks))   $doneTasks   = 0;
+    if (!isset($totalTaskCount)) $totalTaskCount = count($tasks);
 
     $greeting = '';
     $hour = (int) date('G');
@@ -14,8 +18,6 @@
     else                 $greeting = 'Good evening';
 
     $todayDate = date('l, F j');
-    $doneTasks = 0;
-    $totalTaskCount = count($tasks);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -29,10 +31,10 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#C0294A',
-                        'primary-light': '#D94060',
-                        'primary-dark': '#A0223E',
-                        sidebar: '#1a1a2e',
+                        primary: '#E0405C',
+                        'primary-light': '#FDE8ED',
+                        'primary-dark': '#C0294A',
+                        sidebar: '#1B1B26',
                         surface: '#F7F7FA',
                     },
                     fontFamily: {
@@ -49,10 +51,10 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #C0294A; }
+        ::-webkit-scrollbar-thumb:hover { background: #E0405C; }
 
         .task-row { transition: background 0.15s ease; }
-        .task-row:hover { background: #fdf2f4; }
+        .task-row:hover { background: #FDE8ED/30; }
         .card-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
         .card-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,0.08); }
 
@@ -71,11 +73,11 @@
             border: 1.5px solid #f0f0f0;
         }
         .quick-btn:hover {
-            border-color: #C0294A;
-            color: #C0294A;
-            background: #fdf2f4;
+            border-color: #E0405C;
+            color: #E0405C;
+            background: #FDE8ED;
         }
-        .quick-btn:hover svg { color: #C0294A; }
+        .quick-btn:hover svg { color: #E0405C; }
 
         .mood-btn { transition: transform 0.15s ease; }
         .mood-btn:hover { transform: scale(1.2); }
@@ -90,19 +92,8 @@
         <!-- Top Bar -->
         <header class="bg-white border-b border-gray-100/80 px-8 py-4 flex items-center justify-between flex-shrink-0">
             <div>
-                <p class="text-gray-400 text-xs font-medium"><?= $greeting ?>,</p>
-                <h1 class="text-lg font-bold text-gray-900"><?= htmlspecialchars($user['name']) ?></h1>
-            </div>
-            <div class="flex items-center gap-3">
-                <button class="relative w-10 h-10 bg-gray-50 hover:bg-gray-100 rounded-xl flex items-center justify-center transition-colors">
-                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"/>
-                    </svg>
-                    <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
-                </button>
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-pink-400 flex items-center justify-center text-white font-bold text-xs shadow">
-                    <?= strtoupper(substr($user['name'], 0, 1) . substr(strstr($user['name'], ' '), 1, 1)) ?>
-                </div>
+                <p class="text-gray-400 text-xs font-medium">Good Morning</p>
+                <h1 class="text-lg font-bold text-gray-900">Ones</h1>
             </div>
         </header>
 
@@ -112,22 +103,9 @@
                 <!-- LEFT COLUMN (8 cols) -->
                 <div class="col-span-8 space-y-6">
 
-                    <!-- Summary Banner -->
-                    <div class="bg-gradient-to-r from-primary via-[#d1365c] to-[#e05a77] rounded-2xl p-6 text-white relative overflow-hidden">
-                        <div class="absolute -right-8 -top-8 w-40 h-40 bg-white/5 rounded-full"></div>
-                        <div class="absolute -right-4 bottom-0 w-24 h-24 bg-white/5 rounded-full"></div>
-                        <span class="inline-block bg-white/20 text-xs font-semibold px-3 py-1 rounded-full mb-3"><?= $todayDate ?></span>
-                        <h2 class="text-2xl font-extrabold mb-1"><?= $doneTasks ?>/<?= $totalTaskCount ?> Task Done</h2>
-                        <p class="text-white/70 text-sm font-medium">"Small steps still move you forward."</p>
-                        <div class="mt-3 space-y-1 text-white/60 text-xs">
-                            <p>• 5 hours 35 minutes of sleep</p>
-                            <p>• You haven't exercise this day</p>
-                        </div>
-                    </div>
-
                     <!-- Quick Actions -->
                     <div class="grid grid-cols-2 gap-4">
-                        <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=plans" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center">
+                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=plans" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center shadow-sm">
                             <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
                                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
@@ -135,7 +113,7 @@
                             </div>
                             <span class="text-xs font-semibold text-gray-700">Add Plan</span>
                         </a>
-                        <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=notes" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center">
+                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=createnotes" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center shadow-sm">
                             <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
                                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
@@ -146,18 +124,18 @@
                     </div>
 
                     <!-- Today's Actions -->
-                    <div class="bg-white rounded-2xl border border-gray-100/80">
+                    <div class="bg-white rounded-2xl border border-gray-100/80 shadow-sm overflow-hidden">
                         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-50">
                             <h3 class="text-sm font-bold text-gray-900">Todays Action</h3>
-                            <span class="text-xs font-bold text-primary"><?= $doneTasks ?>/<?= $totalTaskCount ?></span>
+                            <span id="taskCounter" class="text-xs font-bold text-primary"><?= $doneTasks ?>/<?= $totalTaskCount ?></span>
                         </div>
-                        <div class="divide-y divide-gray-50">
+                        <div class="divide-y divide-gray-50" id="tasksList">
                             <?php if (empty($tasks)): ?>
                                 <div class="px-6 py-8 text-center">
-                                    <p class="text-gray-400 text-sm">Belum ada plan. Yuk buat plan pertama!</p>
+                                    <p class="text-gray-400 text-sm">Belum ada plan untuk hari ini. Yuk buat plan!</p>
                                 </div>
                             <?php else: ?>
-                                <?php foreach (array_slice($tasks, 0, 5) as $task):
+                                <?php foreach ($tasks as $task):
                                     $urgClass = 'urgency-santuy';
                                     $urgName = $task['urgency_name'] ?? '-';
                                     if (stripos($urgName, 'Mepet') !== false)      $urgClass = 'urgency-mepet';
@@ -169,18 +147,29 @@
                                     if (stripos($impName, 'Harga') !== false)       $impClass = 'importance-harga';
                                     elseif (stripos($impName, 'Highkey') !== false)  $impClass = 'importance-highkey';
                                     elseif (stripos($impName, 'Mid') !== false)     $impClass = 'importance-mid';
+
+                                    $isDone = !empty($task['is_completed']);
                                 ?>
                                 <div class="task-row flex items-center gap-4 px-6 py-3.5">
-                                    <input type="checkbox" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30 accent-[#C0294A] cursor-pointer">
+                                    <input type="checkbox" 
+                                           class="task-checkbox w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30 accent-[#E0405C] cursor-pointer"
+                                           data-plan-id="<?= $task['plan_id'] ?>"
+                                           <?= $isDone ? 'checked' : '' ?>>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-semibold text-gray-800 truncate"><?= htmlspecialchars($task['title']) ?></p>
-                                        <p class="text-xs text-gray-400 truncate"><?= htmlspecialchars($task['description']) ?></p>
+                                        <p id="task-title-<?= $task['plan_id'] ?>" 
+                                           class="text-sm font-semibold truncate transition-all duration-150 <?= $isDone ? 'line-through text-gray-400' : 'text-gray-800' ?>">
+                                            <?= htmlspecialchars($task['title']) ?>
+                                        </p>
+                                        <p id="task-desc-<?= $task['plan_id'] ?>" 
+                                           class="text-xs truncate transition-all duration-150 <?= $isDone ? 'line-through text-gray-300' : 'text-gray-400' ?>">
+                                            <?= htmlspecialchars($task['description']) ?>
+                                        </p>
                                     </div>
                                     <div class="flex items-center gap-2 flex-shrink-0">
                                         <span class="<?= $urgClass ?> text-[10px] font-semibold px-2.5 py-0.5 rounded-full"><?= htmlspecialchars($urgName) ?></span>
                                         <span class="<?= $impClass ?> text-[10px] font-semibold px-2.5 py-0.5 rounded-full"><?= htmlspecialchars($impName) ?></span>
                                     </div>
-                                    <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=plan_detail&id=<?= $task['plan_id'] ?>" class="text-xs text-gray-400 hover:text-primary font-medium transition-colors">Detail</a>
+                                    <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=plans&id=<?= $task['plan_id'] ?>" class="text-xs text-gray-400 hover:text-primary font-medium transition-colors">Detail</a>
                                 </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -191,19 +180,19 @@
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-sm font-bold text-gray-900">Note & Diary</h3>
-                            <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=notes" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
+                            <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
                         </div>
                         <div class="grid grid-cols-3 gap-4">
                             <?php if (empty($recentNotes)): ?>
-                                <div class="col-span-3 bg-white rounded-2xl border border-gray-100/80 p-8 text-center">
+                                <div class="col-span-3 bg-white rounded-2xl border border-gray-100/80 p-8 text-center shadow-sm">
                                     <p class="text-gray-400 text-sm">Belum ada catatan.</p>
                                 </div>
                             <?php else: ?>
                                 <?php foreach (array_slice($recentNotes, 0, 3) as $note): ?>
-                                <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=note_detail&id=<?= $note['notes_id'] ?>"
-                                   class="card-lift bg-white rounded-2xl border border-gray-100/80 p-5 flex flex-col gap-2">
+                                <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=detailnotes&id=<?= $note['notes_id'] ?>"
+                                   class="card-lift bg-white rounded-2xl border border-gray-100/80 p-5 flex flex-col gap-2 shadow-sm">
                                     <span class="text-[10px] text-gray-400 font-medium">Note</span>
-                                    <h4 class="text-sm font-bold text-gray-800 leading-snug"><?= htmlspecialchars($note['title']) ?></h4>
+                                    <h4 class="text-sm font-bold text-gray-800 leading-snug line-clamp-1"><?= htmlspecialchars($note['title']) ?></h4>
                                     <p class="text-xs text-gray-400 leading-relaxed line-clamp-2"><?= htmlspecialchars(substr($note['content'], 0, 80)) ?>...</p>
                                     <?php if (!empty($note['plan_title'])): ?>
                                         <span class="self-start text-[10px] bg-red-50 text-primary font-semibold px-2.5 py-0.5 rounded-full mt-1">📌 <?= htmlspecialchars($note['plan_title']) ?></span>
@@ -220,14 +209,14 @@
                 <div class="col-span-4 space-y-6">
 
                     <!-- Upcoming Agenda -->
-                    <div class="bg-white rounded-2xl border border-gray-100/80 p-5">
+                    <div class="bg-white rounded-2xl border border-gray-100/80 p-5 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-sm font-bold text-gray-900">Upcoming Agenda</h3>
-                            <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=plans" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
+                            <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=plans" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
                         </div>
                         <div class="space-y-3">
                             <?php if (empty($tasks)): ?>
-                                <p class="text-gray-400 text-xs text-center py-4">Belum ada agenda.</p>
+                                <p class="text-gray-400 text-xs text-center py-4">Belum ada agenda hari ini.</p>
                             <?php else: ?>
                                 <?php foreach (array_slice($tasks, 0, 4) as $agenda): ?>
                                 <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50/60 hover:bg-red-50/40 transition-colors">
@@ -243,27 +232,27 @@
                     </div>
 
                     <!-- How's your feeling? -->
-                    <div class="bg-white rounded-2xl border border-gray-100/80 p-5">
+                    <div class="bg-white rounded-2xl border border-gray-100/80 p-5 shadow-sm">
                         <h3 class="text-sm font-bold text-gray-900 mb-2">How are you feeling today?</h3>
                         <p class="text-xs text-gray-400 mb-4">Let's check your mood</p>
                         <div class="flex items-center justify-between">
-                            <button class="mood-btn flex flex-col items-center gap-1">
+                            <button type="button" class="mood-btn flex flex-col items-center gap-1">
                                 <span class="text-2xl">😄</span>
                                 <span class="text-[10px] text-gray-400 font-medium">Great</span>
                             </button>
-                            <button class="mood-btn flex flex-col items-center gap-1">
+                            <button type="button" class="mood-btn flex flex-col items-center gap-1">
                                 <span class="text-2xl">🙂</span>
                                 <span class="text-[10px] text-gray-400 font-medium">Good</span>
                             </button>
-                            <button class="mood-btn flex flex-col items-center gap-1">
+                            <button type="button" class="mood-btn flex flex-col items-center gap-1">
                                 <span class="text-2xl">😐</span>
                                 <span class="text-[10px] text-gray-400 font-medium">Okay</span>
                             </button>
-                            <button class="mood-btn flex flex-col items-center gap-1">
+                            <button type="button" class="mood-btn flex flex-col items-center gap-1">
                                 <span class="text-2xl">😞</span>
                                 <span class="text-[10px] text-gray-400 font-medium">Low</span>
                             </button>
-                            <button class="mood-btn flex flex-col items-center gap-1">
+                            <button type="button" class="mood-btn flex flex-col items-center gap-1">
                                 <span class="text-2xl">😫</span>
                                 <span class="text-[10px] text-gray-400 font-medium">Tired</span>
                             </button>
@@ -272,21 +261,35 @@
 
                     <!-- Stats Mini Cards -->
                     <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-gradient-to-br from-primary to-[#e05a77] rounded-2xl p-4 text-white">
-                            <p class="text-white/70 text-[10px] font-semibold uppercase tracking-wider">Plans</p>
-                            <p class="text-2xl font-extrabold mt-1"><?= $totalTaskCount ?></p>
+                        <div class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm hover:border-gray-300 transition-all flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Plans</p>
+                                <p class="text-2xl font-extrabold text-gray-900 mt-0.5"><?= $totalTaskCount ?></p>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-[#E0405C]">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75"/>
+                                </svg>
+                            </div>
                         </div>
-                        <div class="bg-gradient-to-br from-indigo-500 to-indigo-400 rounded-2xl p-4 text-white">
-                            <p class="text-white/70 text-[10px] font-semibold uppercase tracking-wider">Notes</p>
-                            <p class="text-2xl font-extrabold mt-1"><?= isset($recentNotes) ? count($recentNotes) : 0 ?></p>
+                        <div class="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-sm hover:border-gray-300 transition-all flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Notes</p>
+                                <p class="text-2xl font-extrabold text-gray-900 mt-0.5"><?= count($recentNotes) ?></p>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Recent Activity -->
-                    <div class="bg-white rounded-2xl border border-gray-100/80 p-5">
+                    <div class="bg-white rounded-2xl border border-gray-100/80 p-5 shadow-sm">
                         <h3 class="text-sm font-bold text-gray-900 mb-4">Recent Activity</h3>
                         <div class="space-y-3">
-                            <?php foreach (array_slice($tasks, 0, 3) as $idx => $act): ?>
+                            <?php foreach (array_slice($tasks, 0, 3) as $act): ?>
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
                                     <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -312,5 +315,56 @@
         </main>
     </div>
 
+    <script>
+        // ── Checkbox status toggle via AJAX ──────────────────────────────
+        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', async function() {
+                const planId = this.getAttribute('data-plan-id');
+                const isCompleted = this.checked ? 1 : 0;
+                const titleEl = document.getElementById('task-title-' + planId);
+                const descEl = document.getElementById('task-desc-' + planId);
+
+                try {
+                    const response = await fetch('/ProjectCCIT_PHP_NATIVE/index.php?page=ajaxUpdateTaskStatus', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            plan_id: planId,
+                            is_completed: isCompleted,
+                            date: '<?= date('Y-m-d') ?>'
+                        })
+                    });
+
+                    const resData = await response.json();
+                    if (resData.success) {
+                        // Dynamically update counter
+                        const counter = document.getElementById('taskCounter');
+                        if (counter) {
+                            counter.textContent = resData.completed + '/' + resData.total;
+                        }
+
+                        // Toggle strike-through styling on task text
+                        if (this.checked) {
+                            titleEl?.classList.add('line-through', 'text-gray-400');
+                            titleEl?.classList.remove('text-gray-800');
+                            descEl?.classList.add('line-through', 'text-gray-300');
+                        } else {
+                            titleEl?.classList.remove('line-through', 'text-gray-400');
+                            titleEl?.classList.add('text-gray-800');
+                            descEl?.classList.remove('line-through', 'text-gray-300');
+                        }
+                    } else {
+                        // Revert on failure
+                        this.checked = !this.checked;
+                    }
+                } catch (error) {
+                    console.error('Error updating task status:', error);
+                    this.checked = !this.checked;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

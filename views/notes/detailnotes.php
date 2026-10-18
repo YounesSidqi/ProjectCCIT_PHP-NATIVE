@@ -1,25 +1,31 @@
 <?php
     $currentPage = 'notes';
     $navLayoutPath = __DIR__ . '/../layouts/navlayout.php';
+    if (!file_exists($navLayoutPath)) {
+        $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
+    }
 
-    if (!isset($note)) $note = null;
+    if (!isset($note) && !empty($_GET['id'])) {
+        require_once __DIR__ . '/../../models/models.php';
+        $note = getNoteById((int) $_GET['id']);
+    }
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $note ? htmlspecialchars($note['title']) : 'Note Detail' ?> — Ritma!</title>
+    <title><?= $note ? htmlspecialchars($note['title']) : 'Note Detail' ?> — NoteSpace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#C0294A',
-                        'primary-light': '#D94060',
-                        'primary-dark': '#A0223E',
-                        sidebar: '#1a1a2e',
+                        primary: '#E0405C',
+                        'primary-light': '#FDE8ED',
+                        'primary-dark': '#C0294A',
+                        sidebar: '#1B1B26',
                         surface: '#F7F7FA',
                     },
                     fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
@@ -50,7 +56,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
 
         <header class="bg-white border-b border-gray-100/80 px-8 py-4 flex items-center gap-4 flex-shrink-0">
-            <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=notes" class="text-gray-400 hover:text-primary transition-colors">
+            <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes" class="text-gray-400 hover:text-primary transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
                 </svg>
@@ -65,7 +71,7 @@
         <main class="flex-1 overflow-y-auto px-8 py-6">
             <div class="max-w-3xl mx-auto">
 
-                <div class="bg-white rounded-2xl border border-gray-100/80 p-8">
+                <div class="bg-white rounded-2xl border border-gray-100/80 p-8 shadow-sm">
 
                     <h2 class="text-xl font-extrabold text-gray-900 mb-4 leading-tight"><?= htmlspecialchars($note['title']) ?></h2>
 
@@ -86,8 +92,8 @@
                     <?php endif; ?>
 
                     <div class="flex items-center gap-3 pt-5 border-t border-gray-50">
-                        <a href="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=edit_note_form&id=<?= $note['notes_id'] ?>"
-                           class="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all">
+                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=editnotes&id=<?= $note['notes_id'] ?>"
+                           class="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-primary/20">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
                             </svg>
@@ -115,7 +121,7 @@
                 </div>
                 <h3 class="text-base font-bold text-gray-900 mb-1">Delete this Note?</h3>
                 <p class="text-xs text-gray-400 mb-6">This note will be permanently deleted from your device and can't be recovered.</p>
-                <form action="/ProjectCCIT_PHP_NATIVE/controllers/controllers.php?action=delete_note" method="POST" class="flex items-center justify-center gap-3">
+                <form action="/ProjectCCIT_PHP_NATIVE/index.php?page=delete_note" method="POST" class="flex items-center justify-center gap-3">
                     <input type="hidden" name="notes_id" value="<?= $note['notes_id'] ?>">
                     <button type="submit" class="bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all">Yes, Delete</button>
                     <button type="button" onclick="closeModal('deleteNoteModal')" class="text-primary border border-primary/30 hover:bg-red-50 text-sm font-semibold px-6 py-2.5 rounded-xl transition-all">Cancel</button>
