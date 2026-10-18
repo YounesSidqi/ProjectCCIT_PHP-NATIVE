@@ -1,6 +1,6 @@
 <?php
     $currentPage = 'notes';
-    $navLayoutPath = __DIR__ . '/../layouts/navlayout.php';
+    $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     if (!file_exists($navLayoutPath)) {
         $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     }
@@ -11,7 +11,7 @@
     }
     if (!isset($plans)) {
         require_once __DIR__ . '/../../models/models.php';
-        $plans = getAllPlans($_SESSION['user_id'] ?? 1);
+        $plans = getAllPlans(defined('CURRENT_USER_ID') ? CURRENT_USER_ID : 1);
     }
 ?>
 <!DOCTYPE html>
@@ -62,7 +62,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
 
         <header class="bg-white border-b border-gray-100/80 px-8 py-4 flex items-center gap-4 flex-shrink-0">
-            <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=detailnotes&id=<?= $note ? $note['notes_id'] : '' ?>" class="text-gray-400 hover:text-primary transition-colors">
+            <a href="index.php?page=detailnotes&id=<?= $note ? $note['notes_id'] : '' ?>" class="text-gray-400 hover:text-primary transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
                 </svg>
@@ -76,7 +76,7 @@
         <?php if ($note): ?>
         <main class="flex-1 overflow-y-auto px-8 py-6">
             <div class="max-w-2xl mx-auto">
-                <form action="/ProjectCCIT_PHP_NATIVE/index.php?page=update_note" method="POST" enctype="multipart/form-data"
+                <form action="index.php?page=update_note" method="POST"
                       class="bg-white rounded-2xl border border-gray-100/80 p-8 space-y-5 shadow-sm">
 
                     <input type="hidden" name="notes_id" value="<?= $note['notes_id'] ?>">
@@ -96,34 +96,15 @@
                     <div>
                         <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Linked Plan (optional)</label>
                         <select name="plan_id" class="mt-1.5 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all bg-white">
-                            <option value="0">No linked plan</option>
+                            <option value="">No linked plan</option>
                             <?php foreach ($plans as $p): ?>
                                 <option value="<?= $p['plan_id'] ?>" <?= ($note['plan_id'] == $p['plan_id']) ? 'selected' : '' ?>><?= htmlspecialchars($p['title']) ?> (<?= htmlspecialchars($p['plan_date'] ?? '-') ?>)</option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
-                    <!-- Image Upload Dropzone -->
-                    <div>
-                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Attach Image</label>
-                        <div id="dropzone" class="dropzone mt-1.5 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer"
-                             onclick="document.getElementById('imageInput').click()">
-                            <?php if (!empty($note['image_path'])): ?>
-                                <img id="previewImg" src="/ProjectCCIT_PHP_NATIVE/<?= htmlspecialchars($note['image_path']) ?>" class="w-32 h-32 object-cover rounded-lg mb-3">
-                            <?php else: ?>
-                                <img id="previewImg" src="" class="hidden w-32 h-32 object-cover rounded-lg mb-3">
-                            <?php endif; ?>
-                            <svg id="uploadIcon" class="w-8 h-8 text-primary mb-2 <?= !empty($note['image_path']) ? 'hidden' : '' ?>" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-                            </svg>
-                            <p class="text-xs text-gray-400"><span class="text-primary font-semibold">Click here</span> to replace your image</p>
-                            <p class="text-[10px] text-gray-300 mt-1">Supported format: png, jpg, jpeg</p>
-                        </div>
-                        <input type="file" name="image" id="imageInput" accept="image/png,image/jpeg,image/jpg" class="hidden" onchange="previewFile(this)">
-                    </div>
-
                     <div class="pt-3 flex gap-3">
-                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=detailnotes&id=<?= $note['notes_id'] ?>"
+                        <a href="index.php?page=detailnotes&id=<?= $note['notes_id'] ?>"
                            class="w-1/3 text-center border border-gray-200 text-gray-600 font-semibold py-3 rounded-xl hover:bg-gray-50 transition-all text-sm">
                             Cancel
                         </a>
@@ -140,39 +121,5 @@
         </main>
         <?php endif; ?>
     </div>
-
-    <script>
-        function previewFile(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.getElementById('previewImg');
-                    img.src = e.target.result;
-                    img.classList.remove('hidden');
-                    document.getElementById('uploadIcon').classList.add('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        const dz = document.getElementById('dropzone');
-        if (dz) {
-            dz.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                this.classList.add('dragover');
-            });
-            dz.addEventListener('dragleave', function() {
-                this.classList.remove('dragover');
-            });
-            dz.addEventListener('drop', function(e) {
-                e.preventDefault();
-                this.classList.remove('dragover');
-                const input = document.getElementById('imageInput');
-                input.files = e.dataTransfer.files;
-                previewFile(input);
-            });
-        }
-    </script>
 </body>
 </html>

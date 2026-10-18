@@ -1,4 +1,8 @@
 <?php
+// ==============================================================
+// CONTROLLER: Simple Request Handlers for ProjectCCIT_PHP_NATIVE
+// ==============================================================
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -6,17 +10,16 @@ error_reporting(E_ALL);
 session_start();
 require_once __DIR__ . '/../models/models.php';
 
-// Simulated auth — hardcode user_id = 1 (ones) for dev.
-if (!isset($_SESSION['user_id'])) {
-    $_SESSION['user_id'] = 1;
-}
-$userId = $_SESSION['user_id'];
+// Single-user enforcement using global constant defined in config.php
+$userId = defined('CURRENT_USER_ID') ? CURRENT_USER_ID : 1;
+$_SESSION['user_id'] = $userId;
+
 $user = getUserById($userId);
 if (!$user) {
     $user = ['id' => 1, 'name' => 'ones', 'email' => 'onesmelon@gmail.com'];
 }
 
-// ─── Controller Functions ──────────────────────────────
+// ─── Dashboard Handler ────────────────────────────────────────
 
 function showDashboard() {
     global $userId, $user;
@@ -32,75 +35,21 @@ function showDashboard() {
     require __DIR__ . '/../views/dashboard/dashboard.php';
 }
 
-function ajaxUpdateTaskStatus() {
-    global $userId;
-    
-    // Read input from JSON body or $_POST
-    $rawInput = file_get_contents('php://input');
-    $data = json_decode($rawInput, true);
-    if (!is_array($data) || empty($data)) {
-        $data = $_POST;
-    }
+// ─── Task Status Toggle (Simple GET Link, NO AJAX) ─────────────
 
-    $planId = isset($data['plan_id']) ? (int) $data['plan_id'] : 0;
-    $isCompleted = isset($data['is_completed']) ? (bool) $data['is_completed'] : false;
-    $date = !empty($data['date']) ? $data['date'] : date('Y-m-d');
+function togglePlanStatus() {
+    $planId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    $status = isset($_GET['status']) ? (int) $_GET['status'] : 0;
 
     if ($planId > 0) {
-        updateTaskStatus($planId, $isCompleted);
+        updateTaskStatus($planId, $status);
     }
 
-    $stats = getTaskCompletionStats($userId, $date);
-
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success'   => true,
-        'completed' => (int) $stats['completed'],
-        'total'     => (int) $stats['total']
-    ]);
+    header("Location: index.php?page=dashboard");
     exit();
 }
 
-function storeNote() {
-    global $userId;
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $title = trim($_POST['title'] ?? '');
-        $content = trim($_POST['content'] ?? '');
-        $planId = !empty($_POST['plan_id']) ? (int) $_POST['plan_id'] : null;
-        $imagePath = null;
-
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../assets/uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $filename = 'note_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
-                $imagePath = 'assets/uploads/' . $filename;
-            }
-        }
-
-        saveNote($userId, $planId, $title, $content, $imagePath);
-        header("Location: index.php?page=allnotes");
-        exit();
-    }
-}
-
-function storePlan() {
-    global $userId;
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $title = trim($_POST['title'] ?? '');
-        $description = trim($_POST['description'] ?? '');
-        $planDate = !empty($_POST['plan_date']) ? $_POST['plan_date'] : date('Y-m-d');
-        $urgencyStatus = $_POST['urgency_status'] ?? '1';
-        $importantStatus = $_POST['important_status'] ?? '1';
-
-        savePlan($userId, $title, $description, $planDate, $urgencyStatus, $importantStatus);
-        header("Location: index.php?page=plans");
-        exit();
-    }
-}
+// ─── Note Handlers ─────────────────────────────────────────────
 
 function showAllNotes() {
     global $userId, $user;
@@ -112,6 +61,19 @@ function showCreateNote() {
     global $userId, $user;
     $plans = getAllPlans($userId);
     require __DIR__ . '/../views/notes/createnotes.php';
+}
+
+function storeNote() {
+    global $userId;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $title = trim($_POST['title'] ?? '');
+        $content = trim($_POST['content'] ?? '');
+        $planId = !empty($_POST['plan_id']) ? (int) $_POST['plan_id'] : null;
+
+        saveNote($userId, $planId, $title, $content);
+        header("Location: index.php?page=allnotes");
+        exit();
+    }
 }
 
 function showNoteDetail() {
@@ -130,28 +92,14 @@ function showEditNoteForm() {
 }
 
 function updateNoteAction() {
-    global $userId;
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $noteId = (int) ($_POST['notes_id'] ?? 0);
         $title = trim($_POST['title'] ?? '');
         $content = trim($_POST['content'] ?? '');
         $planId = !empty($_POST['plan_id']) ? (int) $_POST['plan_id'] : null;
-        $imagePath = null;
 
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../assets/uploads/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
-            $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-            $filename = 'note_' . time() . '_' . mt_rand(1000, 9999) . '.' . $ext;
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
-                $imagePath = 'assets/uploads/' . $filename;
-            }
-        }
-
-        updateNote($noteId, $planId, $title, $content, $imagePath);
-        header("Location: index.php?page=note_detail&id=" . $noteId);
+        updateNote($noteId, $planId, $title, $content);
+        header("Location: index.php?page=detailnotes&id=" . $noteId);
         exit();
     }
 }
@@ -165,6 +113,8 @@ function deleteNoteAction() {
     }
 }
 
+// ─── Plan Handlers ─────────────────────────────────────────────
+
 function showAllPlans() {
     global $userId, $user;
     $selectedDate = !empty($_GET['date']) ? $_GET['date'] : null;
@@ -176,6 +126,21 @@ function showAllPlans() {
         $selectedPlan = getPlanById((int) $_GET['id']);
     }
     require __DIR__ . '/../views/plans/allplans.php';
+}
+
+function storePlan() {
+    global $userId;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $title = trim($_POST['title'] ?? '');
+        $description = trim($_POST['description'] ?? '');
+        $planDate = !empty($_POST['plan_date']) ? $_POST['plan_date'] : date('Y-m-d');
+        $urgencyStatus = $_POST['urgency_status'] ?? '1';
+        $importantStatus = $_POST['important_status'] ?? '1';
+
+        savePlan($userId, $title, $description, $planDate, $urgencyStatus, $importantStatus);
+        header("Location: index.php?page=plans");
+        exit();
+    }
 }
 
 function updatePlanAction() {
@@ -202,7 +167,7 @@ function deletePlanAction() {
     }
 }
 
-// ─── Dispatcher ────────────────────────────────────────
+// ─── Router Dispatcher ─────────────────────────────────────────
 
 $action = $_GET['page'] ?? $_POST['page'] ?? $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
 
@@ -211,19 +176,14 @@ switch ($action) {
         showDashboard();
         break;
 
-    case 'ajaxUpdateTaskStatus':
-    case 'ajax_update_task_status':
-        ajaxUpdateTaskStatus();
+    case 'toggle_plan':
+    case 'togglePlanStatus':
+        togglePlanStatus();
         break;
 
     case 'store_note':
     case 'add_note':
         storeNote();
-        break;
-
-    case 'store_plan':
-    case 'add_plan':
-        storePlan();
         break;
 
     case 'allnotes':
@@ -257,11 +217,13 @@ switch ($action) {
 
     case 'plans':
     case 'allplans':
+    case 'plan_detail':
         showAllPlans();
         break;
 
-    case 'plan_detail':
-        showAllPlans();
+    case 'store_plan':
+    case 'add_plan':
+        storePlan();
         break;
 
     case 'edit_plan':

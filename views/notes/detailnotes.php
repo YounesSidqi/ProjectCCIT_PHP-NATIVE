@@ -1,6 +1,6 @@
 <?php
     $currentPage = 'notes';
-    $navLayoutPath = __DIR__ . '/../layouts/navlayout.php';
+    $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     if (!file_exists($navLayoutPath)) {
         $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     }
@@ -56,7 +56,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
 
         <header class="bg-white border-b border-gray-100/80 px-8 py-4 flex items-center gap-4 flex-shrink-0">
-            <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes" class="text-gray-400 hover:text-primary transition-colors">
+            <a href="index.php?page=allnotes" class="text-gray-400 hover:text-primary transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
                 </svg>
@@ -83,16 +83,8 @@
                         <?= nl2br(htmlspecialchars($note['content'])) ?>
                     </div>
 
-                    <?php if (!empty($note['image_path'])): ?>
-                        <div class="mb-6">
-                            <img src="/ProjectCCIT_PHP_NATIVE/<?= htmlspecialchars($note['image_path']) ?>"
-                                 alt="Note image"
-                                 class="w-full max-w-md rounded-xl border border-gray-100 shadow-sm">
-                        </div>
-                    <?php endif; ?>
-
                     <div class="flex items-center gap-3 pt-5 border-t border-gray-50">
-                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=editnotes&id=<?= $note['notes_id'] ?>"
+                        <a href="index.php?page=editnotes&id=<?= $note['notes_id'] ?>"
                            class="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all shadow-md shadow-primary/20">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
@@ -120,8 +112,8 @@
                     </svg>
                 </div>
                 <h3 class="text-base font-bold text-gray-900 mb-1">Delete this Note?</h3>
-                <p class="text-xs text-gray-400 mb-6">This note will be permanently deleted from your device and can't be recovered.</p>
-                <form action="/ProjectCCIT_PHP_NATIVE/index.php?page=delete_note" method="POST" class="flex items-center justify-center gap-3">
+                <p class="text-xs text-gray-400 mb-6">This note will be permanently deleted and cannot be recovered.</p>
+                <form action="index.php?page=delete_note" method="POST" class="flex items-center justify-center gap-3">
                     <input type="hidden" name="notes_id" value="<?= $note['notes_id'] ?>">
                     <button type="submit" class="bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-all">Yes, Delete</button>
                     <button type="button" onclick="closeModal('deleteNoteModal')" class="text-primary border border-primary/30 hover:bg-red-50 text-sm font-semibold px-6 py-2.5 rounded-xl transition-all">Cancel</button>

@@ -170,15 +170,15 @@ function deletePlan($planId) {
 
 // ─── NOTES ──────────────────────────────────────────────
 
-function saveNote($userId, $planId, $title, $content, $imagePath) {
+function saveNote($userId, $planId, $title, $content) {
     global $pdo;
     $cleanPlanId = (!empty($planId) && is_numeric($planId) && (int)$planId > 0) ? (int)$planId : null;
 
-    $sql = "INSERT INTO notes_table (user_id, plan_id, title, content, image_path) 
-            VALUES (:user_id, :plan_id, :title, :content, :image_path)";
+    $sql = "INSERT INTO notes_table (user_id, plan_id, title, content) 
+            VALUES (:user_id, :plan_id, :title, :content)";
     
     $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+    $stmt->bindValue(':user_id', $userId ?: CURRENT_USER_ID, PDO::PARAM_INT);
     if ($cleanPlanId === null) {
         $stmt->bindValue(':plan_id', null, PDO::PARAM_NULL);
     } else {
@@ -186,20 +186,19 @@ function saveNote($userId, $planId, $title, $content, $imagePath) {
     }
     $stmt->bindValue(':title', $title, PDO::PARAM_STR);
     $stmt->bindValue(':content', $content, PDO::PARAM_STR);
-    $stmt->bindValue(':image_path', $imagePath, $imagePath === null ? PDO::PARAM_NULL : PDO::PARAM_STR);
 
     $success = $stmt->execute();
     return $success ? $pdo->lastInsertId() : false;
 }
 
 // Alias for backwards compatibility
-function insertNote($userId, $planId, $title, $content, $imagePath) {
-    return saveNote($userId, $planId, $title, $content, $imagePath);
+function insertNote($userId, $planId, $title, $content) {
+    return saveNote($userId, $planId, $title, $content);
 }
 
 function getAllNotes($userId) {
     global $pdo;
-    $sql = "SELECT n.notes_id, n.user_id, n.plan_id, n.title, n.content, n.image_path,
+    $sql = "SELECT n.notes_id, n.user_id, n.plan_id, n.title, n.content,
                    p.title AS plan_title
             FROM notes_table n
             LEFT JOIN plans_table p ON n.plan_id = p.plan_id
@@ -213,7 +212,7 @@ function getAllNotes($userId) {
 
 function getNoteById($noteId) {
     global $pdo;
-    $sql = "SELECT n.notes_id, n.user_id, n.plan_id, n.title, n.content, n.image_path,
+    $sql = "SELECT n.notes_id, n.user_id, n.plan_id, n.title, n.content,
                    p.title AS plan_title
             FROM notes_table n
             LEFT JOIN plans_table p ON n.plan_id = p.plan_id
@@ -224,18 +223,12 @@ function getNoteById($noteId) {
     return $stmt->fetch() ?: null;
 }
 
-function updateNote($noteId, $planId, $title, $content, $imagePath = null) {
+function updateNote($noteId, $planId, $title, $content) {
     global $pdo;
     $cleanPlanId = (!empty($planId) && is_numeric($planId) && (int)$planId > 0) ? (int)$planId : null;
 
-    if ($imagePath !== null) {
-        $sql = "UPDATE notes_table SET plan_id = :plan_id, title = :title, content = :content, image_path = :image_path WHERE notes_id = :note_id";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':image_path', $imagePath, PDO::PARAM_STR);
-    } else {
-        $sql = "UPDATE notes_table SET plan_id = :plan_id, title = :title, content = :content WHERE notes_id = :note_id";
-        $stmt = $pdo->prepare($sql);
-    }
+    $sql = "UPDATE notes_table SET plan_id = :plan_id, title = :title, content = :content WHERE notes_id = :note_id";
+    $stmt = $pdo->prepare($sql);
 
     if ($cleanPlanId === null) {
         $stmt->bindValue(':plan_id', null, PDO::PARAM_NULL);

@@ -1,11 +1,11 @@
 <?php
     $currentPage = 'dashboard';
-    $navLayoutPath = __DIR__ . '/../layouts/navlayout.php';
+    $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     if (!file_exists($navLayoutPath)) {
         $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     }
 
-    if (!isset($user))        $user        = ['name' => 'Ones', 'email' => 'onesmelon@@gmail.com'];
+    if (!isset($user))        $user        = ['name' => 'Ones', 'email' => 'onesmelon@gmail.com'];
     if (!isset($tasks))       $tasks       = [];
     if (!isset($recentNotes)) $recentNotes = [];
     if (!isset($doneTasks))   $doneTasks   = 0;
@@ -92,8 +92,11 @@
         <!-- Top Bar -->
         <header class="bg-white border-b border-gray-100/80 px-8 py-4 flex items-center justify-between flex-shrink-0">
             <div>
-                <p class="text-gray-400 text-xs font-medium">Good Morning</p>
-                <h1 class="text-lg font-bold text-gray-900">Ones</h1>
+                <p class="text-gray-400 text-xs font-medium"><?= $greeting ?></p>
+                <h1 class="text-lg font-bold text-gray-900"><?= htmlspecialchars($user['name'] ?? 'User') ?></h1>
+            </div>
+            <div class="text-xs text-gray-400 font-medium">
+                <?= $todayDate ?>
             </div>
         </header>
 
@@ -105,7 +108,7 @@
 
                     <!-- Quick Actions -->
                     <div class="grid grid-cols-2 gap-4">
-                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=plans" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center shadow-sm">
+                        <a href="index.php?page=plans" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center shadow-sm">
                             <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
                                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
@@ -113,7 +116,7 @@
                             </div>
                             <span class="text-xs font-semibold text-gray-700">Add Plan</span>
                         </a>
-                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=createnotes" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center shadow-sm">
+                        <a href="index.php?page=createnotes" class="quick-btn bg-white rounded-2xl p-4 flex flex-col items-center gap-2 text-center shadow-sm">
                             <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center">
                                 <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z"/>
@@ -151,17 +154,21 @@
                                     $isDone = !empty($task['is_completed']);
                                 ?>
                                 <div class="task-row flex items-center gap-4 px-6 py-3.5">
-                                    <input type="checkbox" 
-                                           class="task-checkbox w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30 accent-[#E0405C] cursor-pointer"
-                                           data-plan-id="<?= $task['plan_id'] ?>"
-                                           <?= $isDone ? 'checked' : '' ?>>
+                                    <!-- Simple GET link toggle without AJAX -->
+                                    <a href="index.php?page=toggle_plan&id=<?= $task['plan_id'] ?>&status=<?= $isDone ? 0 : 1 ?>"
+                                       class="w-5 h-5 rounded-md border flex items-center justify-center transition-all flex-shrink-0 <?= $isDone ? 'bg-primary border-primary text-white' : 'border-gray-300 hover:border-primary bg-white' ?>"
+                                       title="<?= $isDone ? 'Mark as incomplete' : 'Mark as complete' ?>">
+                                        <?php if ($isDone): ?>
+                                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+                                            </svg>
+                                        <?php endif; ?>
+                                    </a>
                                     <div class="flex-1 min-w-0">
-                                        <p id="task-title-<?= $task['plan_id'] ?>" 
-                                           class="text-sm font-semibold truncate transition-all duration-150 <?= $isDone ? 'line-through text-gray-400' : 'text-gray-800' ?>">
+                                        <p class="text-sm font-semibold truncate transition-all duration-150 <?= $isDone ? 'line-through text-gray-400' : 'text-gray-800' ?>">
                                             <?= htmlspecialchars($task['title']) ?>
                                         </p>
-                                        <p id="task-desc-<?= $task['plan_id'] ?>" 
-                                           class="text-xs truncate transition-all duration-150 <?= $isDone ? 'line-through text-gray-300' : 'text-gray-400' ?>">
+                                        <p class="text-xs truncate transition-all duration-150 <?= $isDone ? 'line-through text-gray-300' : 'text-gray-400' ?>">
                                             <?= htmlspecialchars($task['description']) ?>
                                         </p>
                                     </div>
@@ -169,7 +176,7 @@
                                         <span class="<?= $urgClass ?> text-[10px] font-semibold px-2.5 py-0.5 rounded-full"><?= htmlspecialchars($urgName) ?></span>
                                         <span class="<?= $impClass ?> text-[10px] font-semibold px-2.5 py-0.5 rounded-full"><?= htmlspecialchars($impName) ?></span>
                                     </div>
-                                    <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=plans&id=<?= $task['plan_id'] ?>" class="text-xs text-gray-400 hover:text-primary font-medium transition-colors">Detail</a>
+                                    <a href="index.php?page=detail_plan&id=<?= $task['plan_id'] ?>" class="text-xs text-gray-400 hover:text-primary font-medium transition-colors">Detail</a>
                                 </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -180,7 +187,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-sm font-bold text-gray-900">Note & Diary</h3>
-                            <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=allnotes" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
+                            <a href="index.php?page=allnotes" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
                         </div>
                         <div class="grid grid-cols-3 gap-4">
                             <?php if (empty($recentNotes)): ?>
@@ -189,7 +196,7 @@
                                 </div>
                             <?php else: ?>
                                 <?php foreach (array_slice($recentNotes, 0, 3) as $note): ?>
-                                <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=detailnotes&id=<?= $note['notes_id'] ?>"
+                                <a href="index.php?page=detailnotes&id=<?= $note['notes_id'] ?>"
                                    class="card-lift bg-white rounded-2xl border border-gray-100/80 p-5 flex flex-col gap-2 shadow-sm">
                                     <span class="text-[10px] text-gray-400 font-medium">Note</span>
                                     <h4 class="text-sm font-bold text-gray-800 leading-snug line-clamp-1"><?= htmlspecialchars($note['title']) ?></h4>
@@ -212,7 +219,7 @@
                     <div class="bg-white rounded-2xl border border-gray-100/80 p-5 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-sm font-bold text-gray-900">Upcoming Agenda</h3>
-                            <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=plans" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
+                            <a href="index.php?page=plans" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
                         </div>
                         <div class="space-y-3">
                             <?php if (empty($tasks)): ?>
@@ -314,57 +321,5 @@
             </div>
         </main>
     </div>
-
-    <script>
-        // ── Checkbox status toggle via AJAX ──────────────────────────────
-        document.querySelectorAll('.task-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', async function() {
-                const planId = this.getAttribute('data-plan-id');
-                const isCompleted = this.checked ? 1 : 0;
-                const titleEl = document.getElementById('task-title-' + planId);
-                const descEl = document.getElementById('task-desc-' + planId);
-
-                try {
-                    const response = await fetch('/ProjectCCIT_PHP_NATIVE/index.php?page=ajaxUpdateTaskStatus', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            plan_id: planId,
-                            is_completed: isCompleted,
-                            date: '<?= date('Y-m-d') ?>'
-                        })
-                    });
-
-                    const resData = await response.json();
-                    if (resData.success) {
-                        // Dynamically update counter
-                        const counter = document.getElementById('taskCounter');
-                        if (counter) {
-                            counter.textContent = resData.completed + '/' + resData.total;
-                        }
-
-                        // Toggle strike-through styling on task text
-                        if (this.checked) {
-                            titleEl?.classList.add('line-through', 'text-gray-400');
-                            titleEl?.classList.remove('text-gray-800');
-                            descEl?.classList.add('line-through', 'text-gray-300');
-                        } else {
-                            titleEl?.classList.remove('line-through', 'text-gray-400');
-                            titleEl?.classList.add('text-gray-800');
-                            descEl?.classList.remove('line-through', 'text-gray-300');
-                        }
-                    } else {
-                        // Revert on failure
-                        this.checked = !this.checked;
-                    }
-                } catch (error) {
-                    console.error('Error updating task status:', error);
-                    this.checked = !this.checked;
-                }
-            });
-        });
-    </script>
 </body>
 </html>

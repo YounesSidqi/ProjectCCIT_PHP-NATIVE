@@ -1,13 +1,13 @@
 <?php
     $currentPage = 'notes';
-    $navLayoutPath = __DIR__ . '/../layouts/navlayout.php';
+    $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     if (!file_exists($navLayoutPath)) {
         $navLayoutPath = __DIR__ . '/../layouts/nav_layout.php';
     }
 
     if (!isset($notes)) {
         require_once __DIR__ . '/../../models/models.php';
-        $notes = getAllNotes($_SESSION['user_id'] ?? 1);
+        $notes = getAllNotes(defined('CURRENT_USER_ID') ? CURRENT_USER_ID : 1);
     }
     $totalNotes = count($notes);
 ?>
@@ -41,17 +41,6 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
 
-        .sidebar-link {
-            transition: all 0.18s ease;
-        }
-        .sidebar-link:hover, .sidebar-link.active {
-            background: rgba(224, 64, 92, 0.15);
-            color: #f09bae;
-        }
-        .sidebar-link.active {
-            border-left: 3px solid #E0405C;
-        }
-
         .note-card {
             transition: transform 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.22s ease;
         }
@@ -76,10 +65,6 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #E0405C; }
-
-        .stat-gradient-1 { background: linear-gradient(135deg, #E0405C, #e05a77); }
-        .stat-gradient-2 { background: linear-gradient(135deg, #6366f1, #818cf8); }
-        .stat-gradient-3 { background: linear-gradient(135deg, #0ea5e9, #38bdf8); }
 
         .tag-badge {
             font-size: 10px;
@@ -110,7 +95,7 @@
                         class="search-bar w-72 bg-gray-100 border border-transparent rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-700 placeholder-gray-400 transition-all duration-200"
                         onkeyup="filterNotes()">
                 </div>
-                <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=createnotes"
+                <a href="index.php?page=createnotes"
                    class="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-primary/25 hover:shadow-primary/40">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -123,7 +108,7 @@
         <main class="flex-1 overflow-y-auto px-8 py-7">
 
             <!-- Stats Row -->
-            <div class="grid grid-cols-3 gap-5 mb-8">
+            <div class="grid grid-cols-2 gap-5 mb-8">
                 <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm hover:border-gray-300 transition-all flex items-center justify-between">
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Notes</p>
@@ -149,34 +134,6 @@
                         </svg>
                     </div>
                 </div>
-
-                <div class="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-sm hover:border-gray-300 transition-all flex items-center justify-between">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">With Images</p>
-                        <p class="text-3xl font-extrabold text-gray-900 mt-1"><?= count(array_filter($notes, function($n) { return !empty($n['image_path']); })) ?></p>
-                        <p class="text-[11px] text-gray-400 mt-1">Has attachments</p>
-                    </div>
-                    <div class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 flex-shrink-0">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z"/>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter + count row -->
-            <div class="flex items-center justify-between mb-5">
-                <div class="flex items-center gap-2" id="filterTabs">
-                    <button onclick="setFilter('recent', this)"
-                        class="filter-btn active text-sm font-semibold px-4 py-1.5 rounded-full border border-primary transition-all duration-200">
-                        Recent
-                    </button>
-                    <button onclick="setFilter('oldest', this)"
-                        class="filter-btn text-sm font-medium px-4 py-1.5 rounded-full border border-gray-200 text-gray-500 hover:border-gray-300 transition-all duration-200">
-                        Oldest
-                    </button>
-                </div>
-                <p class="text-xs text-gray-400 font-medium">Showing <span class="text-gray-700 font-bold" id="noteCount"><?= $totalNotes ?></span> notes</p>
             </div>
 
             <!-- Notes Grid -->
@@ -190,15 +147,16 @@
                         </div>
                         <p class="text-base font-bold text-gray-500">No notes yet</p>
                         <p class="text-sm text-gray-400 mt-1">Create your first note to get started!</p>
-                        <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=createnotes" class="mt-4 inline-flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md">
+                        <a href="index.php?page=createnotes" class="mt-4 inline-flex items-center gap-2 bg-primary text-white text-xs font-semibold px-4 py-2 rounded-xl shadow-md">
                             + Add Note
                         </a>
                     </div>
                 <?php else: ?>
                     <?php foreach ($notes as $note): ?>
-                    <a href="/ProjectCCIT_PHP_NATIVE/index.php?page=detailnotes&id=<?= $note['notes_id'] ?>"
+                    <a href="index.php?page=detailnotes&id=<?= $note['notes_id'] ?>"
                        class="note-card bg-white border border-gray-100 rounded-2xl p-5 flex flex-col gap-2 cursor-pointer shadow-sm"
                        data-title="<?= htmlspecialchars($note['title']) ?>">
+                        
                         <div class="flex items-center justify-between">
                             <span class="text-xs text-gray-400 font-medium">Note #<?= $note['notes_id'] ?></span>
                             <?php if (!empty($note['plan_title'])): ?>
@@ -208,16 +166,9 @@
                             <?php endif; ?>
                         </div>
 
-                        <?php if (!empty($note['image_path'])): ?>
-                        <div class="w-full h-28 rounded-xl overflow-hidden mt-1">
-                            <img src="/ProjectCCIT_PHP_NATIVE/<?= htmlspecialchars($note['image_path']) ?>" alt="" class="w-full h-full object-cover">
-                        </div>
-                        <?php endif; ?>
-
                         <h3 class="text-sm font-bold text-gray-900 leading-snug mt-1 line-clamp-1"><?= htmlspecialchars($note['title']) ?></h3>
                         <p class="text-xs text-gray-400 leading-relaxed flex-1 line-clamp-2"><?= htmlspecialchars(substr($note['content'], 0, 80)) ?>...</p>
                         <div class="flex items-center justify-between mt-2 pt-3 border-t border-gray-50">
-                            <span class="text-xs text-gray-300"><?= max(1, ceil(str_word_count($note['content']) / 200)) ?> min read</span>
                             <svg class="w-4 h-4 text-gray-300 hover:text-primary transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
                             </svg>
@@ -242,23 +193,6 @@
     </div>
 
     <script>
-        function setFilter(filter, btn) {
-            document.querySelectorAll('.filter-btn').forEach(b => {
-                b.classList.remove('active', 'text-white', 'border-primary');
-                b.classList.add('text-gray-500', 'border-gray-200');
-            });
-            btn.classList.add('active');
-            btn.classList.remove('text-gray-500', 'border-gray-200');
-
-            const container = document.getElementById('notesGrid');
-            const cards = Array.from(container.children);
-            if (filter === 'oldest') {
-                cards.reverse().forEach(c => container.appendChild(c));
-            } else {
-                cards.reverse().forEach(c => container.appendChild(c));
-            }
-        }
-
         function filterNotes() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cards = document.querySelectorAll('#notesGrid a');
@@ -276,7 +210,6 @@
                 }
             });
 
-            document.getElementById('noteCount').textContent = visible;
             document.getElementById('emptyState').classList.toggle('hidden', visible > 0);
             document.getElementById('notesGrid').classList.toggle('hidden', visible === 0);
         }
