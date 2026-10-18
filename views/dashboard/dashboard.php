@@ -91,10 +91,6 @@
 
         <!-- Top Bar -->
         <header class="bg-white border-b border-gray-100/80 px-8 py-4 flex items-center justify-between flex-shrink-0">
-            <div>
-                <p class="text-gray-400 text-xs font-medium"><?= $greeting ?></p>
-                <h1 class="text-lg font-bold text-gray-900"><?= htmlspecialchars($user['name'] ?? 'User') ?></h1>
-            </div>
             <div class="text-xs text-gray-400 font-medium">
                 <?= $todayDate ?>
             </div>
@@ -186,7 +182,7 @@
                     <!-- Notes & Diary -->
                     <div>
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-sm font-bold text-gray-900">Note & Diary</h3>
+                            <h3 class="text-sm font-bold text-gray-900">Your Notes</h3>
                             <a href="index.php?page=allnotes" class="text-xs text-gray-400 hover:text-primary font-semibold transition-colors">See all</a>
                         </div>
                         <div class="grid grid-cols-3 gap-4">
